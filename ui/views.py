@@ -3,18 +3,16 @@ from typing import Dict, Any, Tuple
 from app.core.config import get_groq_api_key, get_tavily_api_key, GROQ_MODEL_CANDIDATES
 
 def render_sidebar() -> Tuple[str, str, str]:
-    """Renders the sidebar settings, model selector, and API key controls."""
+    """Renders sidebar settings safely without populating secret keys into text input values."""
     with st.sidebar:
         st.markdown("### ⚙️ API Configuration")
         
-        env_groq = get_groq_api_key()
-        env_tavily = get_tavily_api_key()
-        
+        # User input fields default to empty string so pre-configured keys are NEVER visible in plain text
         groq_input = st.text_input(
-            "Groq API Key",
-            value=env_groq if env_groq else "",
+            "Groq API Key (Optional Override)",
+            value="",
             type="password",
-            help="Get a free key at https://console.groq.com/"
+            help="Leave blank to use system pre-configured Secrets."
         )
         
         model_options = GROQ_MODEL_CANDIDATES + ["Custom Model..."]
@@ -22,30 +20,34 @@ def render_sidebar() -> Tuple[str, str, str]:
             "Groq LLM Model",
             options=model_options,
             index=0,
-            help="Select your Groq LLM model. If a model returns 404, fallback candidates are tried automatically."
+            help="Select your Groq LLM model. Fallback candidates kick in if model is unavailable."
         )
         
         if selected_option == "Custom Model...":
-            selected_model = st.text_input("Enter Custom Groq Model Name", value="llama3-70b-8192")
+            selected_model = st.text_input("Enter Custom Groq Model Name", value="openai/gpt-oss-120b")
         else:
             selected_model = selected_option
         
         tavily_input = st.text_input(
-            "Tavily API Key (Optional)",
-            value=env_tavily if env_tavily else "",
+            "Tavily API Key (Optional Override)",
+            value="",
             type="password",
-            help="Optional for AI Search. Falls back to DuckDuckGo if blank."
+            help="Leave blank to use system Secrets or DuckDuckGo fallback."
         )
+        
+        # Resolve active keys safely without displaying them
+        active_groq = get_groq_api_key(groq_input)
+        active_tavily = get_tavily_api_key(tavily_input)
         
         st.markdown("---")
         st.markdown("### 📌 Active System Status")
         
-        if groq_input or env_groq:
+        if active_groq:
             st.markdown(f'<span class="badge-mint">✓ Groq ({selected_model}) Active</span>', unsafe_allow_html=True)
         else:
             st.warning("⚠️ Groq API Key required to run.")
             
-        if tavily_input or env_tavily:
+        if active_tavily:
             st.markdown('<span class="badge-lavender">✓ Tavily AI Search Enabled</span>', unsafe_allow_html=True)
         else:
             st.markdown('<span class="badge-softblue">ℹ DuckDuckGo Free Search (Fallback)</span>', unsafe_allow_html=True)

@@ -18,15 +18,33 @@ GROQ_MODEL_CANDIDATES = [
 DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b"
 
 def get_groq_api_key(override_key: Optional[str] = None) -> Optional[str]:
-    """Retrieve Groq API key from explicit parameter or environment."""
-    key = override_key or os.getenv("GROQ_API_KEY")
+    """Retrieve Groq API key safely without exposing secrets in UI."""
+    key = override_key
+    if not key or not key.strip():
+        key = os.getenv("GROQ_API_KEY")
+    if not key or not key.strip():
+        try:
+            import streamlit as st
+            if "GROQ_API_KEY" in st.secrets:
+                key = st.secrets["GROQ_API_KEY"]
+        except Exception:
+            pass
     if key and key.strip():
         return key.strip()
     return None
 
 def get_tavily_api_key(override_key: Optional[str] = None) -> Optional[str]:
-    """Retrieve Tavily API key from explicit parameter or environment."""
-    key = override_key or os.getenv("TAVILY_API_KEY")
+    """Retrieve Tavily API key safely without exposing secrets in UI."""
+    key = override_key
+    if not key or not key.strip():
+        key = os.getenv("TAVILY_API_KEY")
+    if not key or not key.strip():
+        try:
+            import streamlit as st
+            if "TAVILY_API_KEY" in st.secrets:
+                key = st.secrets["TAVILY_API_KEY"]
+        except Exception:
+            pass
     if key and key.strip():
         return key.strip()
     return None
@@ -36,7 +54,6 @@ def get_active_groq_models(api_key: str) -> List[str]:
     try:
         client = Groq(api_key=api_key)
         models_data = client.models.list().data
-        # Filter for text models (exclude audio/whisper and guard models)
         valid_models = []
         for m in models_data:
             m_id = m.id
