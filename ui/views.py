@@ -57,7 +57,7 @@ def render_sidebar() -> Tuple[str, str, str]:
         st.markdown("- **Max Revision Rounds**: 3 Loops")
         st.markdown("- **Safety Guard**: Prevents infinite loops & budget overruns.")
         
-    return groq_input, tavily_input, selected_model
+    return active_groq, active_tavily, selected_model
 
 def render_node_event(node_name: str, state_update: Dict[str, Any]):
     """Renders a soft pastel card for each node execution during graph streaming."""
