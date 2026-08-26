@@ -50,10 +50,8 @@ def review_draft_quality(
                 return result
             except Exception:
                 pass
-        except Exception as e:
-            err = str(e).lower()
-            if any(k in err for k in ["model_decommissioned", "model_not_found", "400", "404", "decommissioned", "not exist", "no longer supported"]):
-                continue
+        except Exception:
+            continue
 
     return ReviewOutput(
         is_complete=True,

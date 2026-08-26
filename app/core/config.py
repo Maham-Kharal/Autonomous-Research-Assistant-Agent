@@ -82,7 +82,7 @@ def get_llm(groq_api_key: Optional[str] = None, model_name: Optional[str] = None
 def invoke_llm_with_fallback(chain_or_prompt, input_dict: dict, groq_api_key: Optional[str] = None, model_name: Optional[str] = None):
     """
     Executes an LLM chain with multi-model fallback across active Groq models.
-    Catches model error / decommissioned / not found errors automatically.
+    Catches 404 model_not_found, 400 decommissioned, AND 429 rate_limit_exceeded errors automatically.
     """
     api_key = get_groq_api_key(groq_api_key)
     if not api_key:
@@ -106,11 +106,8 @@ def invoke_llm_with_fallback(chain_or_prompt, input_dict: dict, groq_api_key: Op
             else:
                 return llm.invoke(input_dict)
         except Exception as e:
-            err_msg = str(e).lower()
-            if any(k in err_msg for k in ["model_decommissioned", "model_not_found", "400", "404", "decommissioned", "not exist", "no longer supported", "invalid_request_error"]):
-                last_exception = e
-                continue
-            else:
-                raise e
+            # Catch all model failures (rate limit 429, decommissioned 400, not found 404) and switch to next model candidate
+            last_exception = e
+            continue
                 
     raise last_exception if last_exception else RuntimeError("No active Groq model candidates succeeded.")

@@ -55,10 +55,7 @@ def generate_final_report(
             if "# References & Sources" not in final_output:
                 final_output += f"\n\n---\n# References & Sources\n{sources_text}"
             return final_output
-        except Exception as e:
-            err = str(e).lower()
-            if any(k in err for k in ["model_decommissioned", "model_not_found", "400", "404", "decommissioned", "not exist", "no longer supported"]):
-                continue
-            raise e
+        except Exception:
+            continue
 
     return f"# Executive Summary\n\n{draft}\n\n---\n# References & Sources\n{sources_text}"

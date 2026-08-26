@@ -50,10 +50,8 @@ def generate_report_draft(
                 "context": formatted_context if formatted_context else "No specific web results available."
             })
             return response.content
-        except Exception as e:
-            err = str(e).lower()
-            if any(k in err for k in ["model_decommissioned", "model_not_found", "400", "404", "decommissioned", "not exist", "no longer supported"]):
-                continue
-            raise e
+        except Exception:
+            # Catch 429 rate limits, TPM limit exceeded, and switch to next model candidate
+            continue
 
     raise RuntimeError("Failed to generate report draft across all Groq model candidates.")

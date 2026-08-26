@@ -46,11 +46,9 @@ def generate_research_plan(research_question: str, groq_api_key: Optional[str] =
             
             if len(valid_queries) >= 3:
                 return valid_queries[:5]
-        except Exception as e:
-            err = str(e).lower()
-            if any(k in err for k in ["model_decommissioned", "model_not_found", "400", "404", "decommissioned", "not exist", "no longer supported"]):
-                continue
-            raise e
+        except Exception:
+            # Catch 429 rate limits, 404s, 400s and switch to next model
+            continue
 
     return [
         f"{research_question} overview and background",
